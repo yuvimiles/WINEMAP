@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "126353451256",
+    "project_id": "winemap-7a053",
+    "storage_bucket": "winemap-7a053.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:126353451256:android:490530add38e5c8fcef30d",
+        "android_client_info": {
+          "package_name": "com.example.winemap.android"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCiRQgjjmOgiYk4aXhvUu1FgN5UIMO0Okg"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

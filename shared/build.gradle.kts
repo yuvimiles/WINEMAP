@@ -29,10 +29,26 @@ kotlin {
 
     sourceSets {
         commonMain.dependencies {
-            //put your multiplatform dependencies here
+            // DateTime for KMP
+            implementation("org.jetbrains.kotlinx:kotlinx-datetime:0.4.1")
+            // Coroutines
+            implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
+            // Firebase KMP
+            implementation("dev.gitlive:firebase-app:1.10.4")
+            implementation("dev.gitlive:firebase-auth:1.10.4")
+            implementation("dev.gitlive:firebase-firestore:1.10.4")
+            implementation("dev.gitlive:firebase-storage:1.10.4")
+        }
+        androidMain.dependencies {
+            // Firebase Android SDK
+            implementation("com.google.firebase:firebase-auth-ktx")
+            implementation("com.google.firebase:firebase-firestore-ktx")
+            implementation("com.google.firebase:firebase-storage-ktx")
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
+            implementation("org.jetbrains.kotlinx:kotlinx-coroutines-test:1.7.3")
+
         }
     }
 }
