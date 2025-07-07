@@ -12,7 +12,20 @@
           "package_name": "com.example.winemap.android"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "126353451256-jhlokiscceaj21tkreqqu8o93javk5r9.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.winemap.android",
+            "certificate_hash": "6e3ed750382876237cc2b3933fb3b7b7630836fb"
+          }
+        },
+        {
+          "client_id": "126353451256-lsg0962oa6g5am7gsje5op0a7a8rr0uc.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyCiRQgjjmOgiYk4aXhvUu1FgN5UIMO0Okg"
@@ -20,7 +33,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "126353451256-lsg0962oa6g5am7gsje5op0a7a8rr0uc.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }
