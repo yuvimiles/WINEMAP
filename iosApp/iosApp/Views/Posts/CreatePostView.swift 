@@ -1,0 +1,159 @@
+import SwiftUI
+
+struct CreatePostView: View {
+    @StateObject private var postViewModel = PostViewModel()
+    @State private var selectedWinery = ""
+    @State private var content = ""
+    @State private var rating = 0
+    @State private var selectedImagePath = ""
+
+    let onNavigateBack: () -> Void
+    let onPostCreated: () -> Void
+
+    init(
+        onNavigateBack: @escaping () -> Void = {},
+        onPostCreated: @escaping () -> Void = {}
+    ) {
+        self.onNavigateBack = onNavigateBack
+        self.onPostCreated = onPostCreated
+    }
+
+    var body: some View {
+        GeometryReader { geometry in
+            ZStack {
+                // Same background
+                Image("winemap_bg")
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+                    .frame(width: geometry.size.width, height: geometry.size.height)
+                    .clipped()
+                    .opacity(0.9)
+
+                // White overlay
+                Color.white.opacity(0.8)
+                    .ignoresSafeArea()
+
+                VStack(spacing: 0) {
+                    // Top header
+                    HStack {
+                        Button(action: onNavigateBack) {
+                            Image(systemName: "chevron.left")
+                                .font(.system(size: 18, weight: .medium))
+                                .foregroundColor(.black)
+                        }
+
+                        Spacer()
+
+                        HStack(spacing: 8) {
+                            Image("winemap_logo")
+                                .resizable()
+                                .frame(width: 40, height: 40)
+
+                            Text("WINEMAP")
+                                .font(.system(size: 20, weight: .bold))
+                                .foregroundColor(.black)
+                        }
+
+                        Spacer()
+
+                        Button("") {}
+                            .opacity(0)
+                    }
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 16)
+                    .background(Color(red: 0.91, green: 0.86, blue: 0.78))
+
+                    // Create new post title
+                    Text("Create new post")
+                        .font(.system(size: 24, weight: .bold))
+                        .foregroundColor(.black)
+                        .padding(16)
+                        .frame(maxWidth: .infinity)
+                        .background(Color.white.opacity(0.9))
+
+                    // Create form
+                    ScrollView {
+                        VStack(spacing: 16) {
+                            Spacer().frame(height: 16)
+
+                            // Add Image section
+                            ImagePicker(
+                                onImageSelected: { imagePath in
+                                    selectedImagePath = imagePath
+                                }
+                            )
+                            .frame(width: 200, height: 200)
+
+                            Spacer().frame(height: 24)
+
+                            // Star rating
+                            StarRating(
+                                rating: rating,
+                                maxRating: 5,
+                                size: 24,
+                                isInteractive: true,
+                                onRatingChanged: { newRating in
+                                    rating = newRating
+                                }
+                            )
+
+                            Spacer().frame(height: 24)
+
+                            // Choose winery field
+                            WinerySelector(
+                                selectedWinery: $selectedWinery,
+                                onWinerySelected: { winery in
+                                    selectedWinery = winery
+                                }
+                            )
+                            .padding(.horizontal, 16)
+
+                            // Content field
+                            VStack(alignment: .leading, spacing: 8) {
+                                TextField("content", text: $content, axis: .vertical)
+                                    .lineLimit(8)
+                                    .padding()
+                                    .frame(minHeight: 180)
+                                    .background(Color.white.opacity(0.9))
+                                    .cornerRadius(8)
+                                    .overlay(
+                                        RoundedRectangle(cornerRadius: 8)
+                                            .stroke(Color.gray.opacity(0.5), lineWidth: 1)
+                                    )
+                            }
+                            .padding(.horizontal, 16)
+
+                            Spacer().frame(height: 40)
+
+                            // Post button
+                            Button(action: createPost) {
+                                Text("post")
+                                    .font(.system(size: 14))
+                                    .foregroundColor(.white)
+                                    .frame(width: 120, height: 40)
+                                    .background(Color(red: 0.55, green: 0.44, blue: 0.28))
+                                    .cornerRadius(20)
+                            }
+                            .disabled(!isPostValid)
+                            .opacity(isPostValid ? 1.0 : 0.6)
+
+                            Spacer().frame(height: 16)
+                        }
+                    }
+                    .background(Color.white.opacity(0.9))
+                }
+            }
+        }
+        .ignoresSafeArea()
+    }
+
+    private var isPostValid: Bool {
+        !selectedWinery.isEmpty && !content.isEmpty && rating > 0
+    }
+
+    private func createPost() {
+        // Create post with postViewModel
+        // postViewModel.createPost(selectedWinery, content, rating, selectedImagePath)
+        onPostCreated()
+    }
+}

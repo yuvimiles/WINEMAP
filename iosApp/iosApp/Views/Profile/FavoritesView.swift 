@@ -1,0 +1,151 @@
+import SwiftUI
+
+struct FavoritesView: View {
+    @StateObject private var postViewModel = PostViewModel()
+    let onNavigateBack: () -> Void
+    let onWineryClick: (String) -> Void
+
+    @State private var favoriteWineries: [FavoriteWinery] = []
+
+    init(
+        onNavigateBack: @escaping () -> Void = {},
+        onWineryClick: @escaping (String) -> Void = { _ in }
+    ) {
+        self.onNavigateBack = onNavigateBack
+        self.onWineryClick = onWineryClick
+    }
+
+    var body: some View {
+        GeometryReader { geometry in
+            ZStack {
+                // Same background as auth screens
+                Image("winemap_bg")
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+                    .frame(width: geometry.size.width, height: geometry.size.height)
+                    .clipped()
+                    .opacity(0.9)
+
+                // White overlay
+                Color.white.opacity(0.8)
+                    .ignoresSafeArea()
+
+                VStack(spacing: 0) {
+                    // Top header with back arrow and logo
+                    HStack {
+                        Button(action: onNavigateBack) {
+                            Image(systemName: "chevron.left")
+                                .font(.system(size: 18, weight: .medium))
+                                .foregroundColor(.black)
+                        }
+
+                        Spacer()
+
+                        HStack(spacing: 8) {
+                            Image("winemap_logo")
+                                .resizable()
+                                .frame(width: 40, height: 40)
+
+                            Text("WINEMAP")
+                                .font(.system(size: 20, weight: .bold))
+                                .foregroundColor(.black)
+                        }
+
+                        Spacer()
+
+                        Button("") {}
+                            .opacity(0)
+                    }
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 16)
+                    .background(Color(red: 0.91, green: 0.86, blue: 0.78))
+
+                    // My favorite title
+                    Text("My favorite")
+                        .font(.system(size: 24, weight: .bold))
+                        .foregroundColor(.black)
+                        .padding(16)
+                        .frame(maxWidth: .infinity)
+                        .background(Color.white.opacity(0.9))
+
+                    // Favorites list
+                    ScrollView {
+                        LazyVStack(spacing: 16) {
+                            ForEach(favoriteWineries, id: \.name) { winery in
+                                FavoriteWineryCard(
+                                    winery: winery,
+                                    onClick: { onWineryClick(winery.name) }
+                                )
+                            }
+                        }
+                        .padding(16)
+                    }
+                    .background(Color.white.opacity(0.9))
+                }
+            }
+        }
+        .ignoresSafeArea()
+        .onAppear {
+            loadFavoriteWineries()
+        }
+    }
+
+    private func loadFavoriteWineries() {
+        // Will be loaded from PostViewModel in future
+        favoriteWineries = []
+    }
+}
+
+struct FavoriteWineryCard: View {
+    let winery: FavoriteWinery
+    let onClick: () -> Void
+
+    var body: some View {
+        HStack(spacing: 16) {
+            // Winery image
+            Image("winemap_logo")
+                .resizable()
+                .frame(width: 80, height: 80)
+                .cornerRadius(12)
+                .clipped()
+
+            VStack(alignment: .leading, spacing: 8) {
+                Text(winery.name)
+                    .font(.system(size: 18, weight: .bold))
+                    .foregroundColor(.black)
+
+                Text(winery.location)
+                    .font(.system(size: 14))
+                    .foregroundColor(.gray)
+
+                // Star rating
+                StarRating(rating: Int(winery.rating), size: 16)
+            }
+
+            Spacer()
+
+            // Related posts button
+            Button("Related posts") {
+                onClick()
+            }
+            .font(.system(size: 12))
+            .foregroundColor(.white)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
+            .background(Color(red: 0.55, green: 0.44, blue: 0.28))
+            .cornerRadius(18)
+            .frame(height: 36)
+        }
+        .padding(16)
+        .background(Color.white)
+        .cornerRadius(16)
+        .shadow(radius: 4)
+    }
+}
+
+// Data model
+struct FavoriteWinery {
+    let name: String
+    let location: String
+    let rating: Float
+}
