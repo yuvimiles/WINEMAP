@@ -157,6 +157,22 @@ fun MainNavHost(navController: NavHostController, modifier: Modifier = Modifier)
     val postViewModel = rememberPostViewModel()
     val searchViewModel = rememberSearchViewModel()
 
+    // Listen for authentication changes
+    val uiState by authViewModel.uiState.collectAsState()
+
+    // Navigate to signin when user is signed out
+    LaunchedEffect(uiState.isAuthenticated) {
+        if (!uiState.isAuthenticated) {
+            // Find the root nav controller and navigate to signin
+            val context = navController.context
+            if (context is androidx.activity.ComponentActivity) {
+                context.finish()
+                val intent = android.content.Intent(context, context::class.java)
+                context.startActivity(intent)
+            }
+        }
+    }
+
     NavHost(
         navController = navController,
         startDestination = BottomNavItem.Feed.route,
@@ -211,7 +227,7 @@ fun MainNavHost(navController: NavHostController, modifier: Modifier = Modifier)
             )
         }
 
-        // Profile Screen
+        // Profile Screen - Simple logout
         composable(BottomNavItem.Profile.route) {
             ProfileScreen(
                 onNavigateToEditProfile = {

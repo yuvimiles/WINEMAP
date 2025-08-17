@@ -23,6 +23,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.winemap.android.ui.rememberAuthViewModel
 import com.example.winemap.android.ui.components.StarRating
+import com.example.winemap.android.ui.components.PostCard
+import com.example.winemap.domain.models.Post
+import com.example.winemap.presentation.ViewModelProvider
 
 @Composable
 fun ProfileScreen(
@@ -32,22 +35,19 @@ fun ProfileScreen(
     val authViewModel = rememberAuthViewModel()
     val uiState by authViewModel.uiState.collectAsState()
 
-    // Mock data - replace with real data from ViewModel
-    val userPosts = remember {
-        listOf(
-            UserPost(
-                id = "1",
-                imageUrl = "",
-                wineryName = "היה לנו היום כיף מטורף",
-                content = "מגזרים אנחנו במיטבנו טעיב עם מתוחים שלנו",
-                rating = 5,
-                timeAgo = "2 hour ago"
-            )
-        )
+    // Get PostViewModel using your existing ViewModelProvider
+    val postViewModel = ViewModelProvider.postViewModel
+    val postUiState by postViewModel.uiState.collectAsState()
+
+    // Load user posts when user is available
+    LaunchedEffect(uiState.currentUser?.id) {
+        uiState.currentUser?.id?.let { userId ->
+            postViewModel.loadUserPosts(userId)
+        }
     }
 
     Box(modifier = Modifier.fillMaxSize()) {
-        // Same background as other screens
+        // Background image
         Image(
             painter = painterResource(id = com.example.winemap.android.R.drawable.winemap_bg),
             contentDescription = null,
@@ -128,17 +128,28 @@ fun ProfileScreen(
                     Spacer(modifier = Modifier.width(16.dp))
 
                     Column(modifier = Modifier.weight(1f)) {
+                        // Use real user data instead of mock data
                         Text(
-                            text = "Yuvi_Miles",
+                            text = uiState.currentUser?.username ?: "No username",
                             fontSize = 20.sp,
                             fontWeight = FontWeight.Bold,
                             color = Color.Black
                         )
                         Text(
-                            text = "love wine",
+                            text = uiState.currentUser?.bio?.takeIf { it.isNotBlank() } ?: "No bio",
                             fontSize = 14.sp,
                             color = Color.Gray
                         )
+
+                        // Show email if available
+                        uiState.currentUser?.email?.let { email ->
+                            Text(
+                                text = email,
+                                fontSize = 12.sp,
+                                color = Color.Gray,
+                                modifier = Modifier.padding(top = 4.dp)
+                            )
+                        }
                     }
 
                     // Edit button
@@ -163,7 +174,9 @@ fun ProfileScreen(
 
                 // Log out button
                 OutlinedButton(
-                    onClick = { authViewModel.signOut() },
+                    onClick = {
+                        authViewModel.signOut()
+                    },
                     modifier = Modifier.align(Alignment.End),
                     colors = ButtonDefaults.outlinedButtonColors(
                         contentColor = Color.Gray
@@ -197,84 +210,70 @@ fun ProfileScreen(
                     .padding(16.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                items(userPosts) { post ->
-                    UserPostCard(
-                        post = post,
-                        onEditClick = { onNavigateToEditPost(post.id) }
-                    )
+                when {
+                    postUiState.isLoading -> {
+                        item {
+                            Box(
+                                modifier = Modifier.fillMaxWidth(),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                CircularProgressIndicator()
+                            }
+                        }
+                    }
+                    postUiState.errorMessage != null -> {
+                        item {
+                            Box(
+                                modifier = Modifier.fillMaxWidth(),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = "Error loading posts: ${postUiState.errorMessage}",
+                                    color = Color.Red,
+                                    fontSize = 14.sp
+                                )
+                            }
+                        }
+                    }
+                    postUiState.posts.isEmpty() -> {
+                        item {
+                            Box(
+                                modifier = Modifier.fillMaxWidth(),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Column(
+                                    horizontalAlignment = Alignment.CenterHorizontally
+                                ) {
+                                    Text(
+                                        text = "No posts yet",
+                                        color = Color.Gray,
+                                        fontSize = 16.sp
+                                    )
+                                    Text(
+                                        text = "Start sharing your wine experiences!",
+                                        color = Color.Gray,
+                                        fontSize = 12.sp,
+                                        modifier = Modifier.padding(top = 4.dp)
+                                    )
+                                }
+                            }
+                        }
+                    }
+                    else -> {
+                        items(postUiState.posts) { post ->
+                            PostCard(
+                                userImage = post.userProfileImage,
+                                userName = post.userName,
+                                timeAgo = post.getFormattedTimestamp(),
+                                postImage = post.imageUrl,
+                                postContent = post.content,
+                                rating = post.rating,
+                                onEditClick = { onNavigateToEditPost(post.id) },
+                                showEditButton = true
+                            )
+                        }
+                    }
                 }
-            }
-        }
-    }
-}
-
-@Composable
-fun UserPostCard(
-    post: UserPost,
-    onEditClick: () -> Unit = {}
-) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
-    ) {
-        Row(
-            modifier = Modifier.padding(16.dp),
-            verticalAlignment = Alignment.Top
-        ) {
-            // Post image
-            Image(
-                painter = painterResource(id = com.example.winemap.android.R.drawable.winemap_logo),
-                contentDescription = "Post Image",
-                modifier = Modifier
-                    .size(120.dp)
-                    .clip(RoundedCornerShape(12.dp)),
-                contentScale = ContentScale.Crop
-            )
-
-            Spacer(modifier = Modifier.width(16.dp))
-
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = post.wineryName,
-                    fontSize = 16.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.Black
-                )
-                Text(
-                    text = post.content,
-                    fontSize = 14.sp,
-                    color = Color.Gray,
-                    modifier = Modifier.padding(vertical = 8.dp)
-                )
-
-                // Star rating
-                StarRating(
-                    rating = post.rating,
-                    size = 14.dp
-                )
-
-                Spacer(modifier = Modifier.height(8.dp))
-
-                Text(
-                    text = post.timeAgo,
-                    fontSize = 12.sp,
-                    color = Color.Gray
-                )
-            }
-
-            // Edit button
-            IconButton(
-                onClick = onEditClick,
-                modifier = Modifier.size(32.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Edit,
-                    contentDescription = "Edit Post",
-                    tint = Color.Gray,
-                    modifier = Modifier.size(20.dp)
-                )
             }
         }
     }
