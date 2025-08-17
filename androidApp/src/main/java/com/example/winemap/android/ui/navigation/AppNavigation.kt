@@ -253,19 +253,16 @@ fun MainNavHost(navController: NavHostController, modifier: Modifier = Modifier)
         }
 
         // Edit Post Screen
-        composable("edit_post/{postId}") { backStackEntry ->
-            val postId = backStackEntry.arguments?.getString("postId") ?: ""
-            EditPostScreen(
-                postViewModel = postViewModel,
-                postId = postId,
+        composable("edit_profile") {
+            EditProfileScreen(
                 onNavigateBack = {
                     navController.popBackStack()
                 },
-                onPostUpdated = {
-                    navController.popBackStack()
-                },
-                onPostDeleted = {
-                    navController.popBackStack()
+                onSaveProfile = { username, bio ->
+                    navController.navigate(BottomNavItem.Profile.route) {
+                        popUpTo(BottomNavItem.Profile.route) { inclusive = false }
+                        launchSingleTop = true
+                    }
                 }
             )
         }

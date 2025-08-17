@@ -26,8 +26,48 @@ fun EditProfileScreen(
     onSaveProfile: (String, String) -> Unit = { _, _ -> }
 ) {
     val authViewModel = rememberAuthViewModel()
-    var username by remember { mutableStateOf("Yuvi_Miles") }
-    var bio by remember { mutableStateOf("love wine") }
+    val uiState by authViewModel.uiState.collectAsState()
+
+    // Get current user data
+    val currentUser = uiState.currentUser
+
+    var username by remember { mutableStateOf("") }
+    var bio by remember { mutableStateOf("") }
+    var isLoading by remember { mutableStateOf(false) }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
+    var didSubmit by remember { mutableStateOf(false) }
+
+    // Load current user data when screen loads
+    LaunchedEffect(currentUser) {
+        currentUser?.let { user ->
+            username = user.username
+            bio = user.bio
+        }
+    }
+
+    // Handle save - Real implementation
+    val handleSave = {
+        if (currentUser != null && username.isNotBlank()) {
+            val updatedUser = currentUser.copy(
+                username = username.trim(),
+                bio = bio.trim()
+            )
+            didSubmit = true
+            authViewModel.updateUser(updatedUser)
+        }
+    }
+
+    // Listen to auth state changes
+    LaunchedEffect(uiState.isLoading, uiState.errorMessage, didSubmit) {
+        if (didSubmit && !uiState.isLoading && uiState.errorMessage == null && currentUser != null) {
+            onSaveProfile(username, bio)
+            didSubmit = false
+        }
+        if (uiState.errorMessage != null) {
+            errorMessage = uiState.errorMessage
+        }
+        isLoading = uiState.isLoading
+    }
 
     Box(modifier = Modifier.fillMaxSize()) {
         // Same background
@@ -127,7 +167,9 @@ fun EditProfileScreen(
                 OutlinedTextField(
                     value = username,
                     onValueChange = { username = it },
+                    label = { Text("Username") },
                     modifier = Modifier.fillMaxWidth(),
+                    enabled = !isLoading,
                     shape = RoundedCornerShape(8.dp),
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedContainerColor = Color.White.copy(alpha = 0.9f),
@@ -143,7 +185,9 @@ fun EditProfileScreen(
                 OutlinedTextField(
                     value = bio,
                     onValueChange = { bio = it },
+                    label = { Text("Bio") },
                     modifier = Modifier.fillMaxWidth(),
+                    enabled = !isLoading,
                     shape = RoundedCornerShape(8.dp),
                     colors = OutlinedTextFieldDefaults.colors(
                         focusedContainerColor = Color.White.copy(alpha = 0.9f),
@@ -153,24 +197,44 @@ fun EditProfileScreen(
                     )
                 )
 
+                // Error message
+                errorMessage?.let { error ->
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = error,
+                        color = Color.Red,
+                        fontSize = 12.sp
+                    )
+                }
+
                 Spacer(modifier = Modifier.weight(1f))
 
                 // Save button
                 Button(
-                    onClick = { onSaveProfile(username, bio) },
+                    onClick = handleSave,
+                    enabled = !isLoading && username.isNotBlank(),
                     modifier = Modifier
                         .width(120.dp)
                         .height(40.dp),
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = Color(0xFF8B6F47)
+                        containerColor = Color(0xFF8B6F47),
+                        disabledContainerColor = Color.Gray
                     ),
                     shape = RoundedCornerShape(20.dp)
                 ) {
-                    Text(
-                        text = "Save",
-                        color = Color.White,
-                        fontSize = 14.sp
-                    )
+                    if (isLoading) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(20.dp),
+                            color = Color.White,
+                            strokeWidth = 2.dp
+                        )
+                    } else {
+                        Text(
+                            text = "Save",
+                            color = Color.White,
+                            fontSize = 14.sp
+                        )
+                    }
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))

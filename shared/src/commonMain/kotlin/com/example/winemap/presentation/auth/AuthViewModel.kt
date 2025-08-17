@@ -1,5 +1,6 @@
 package com.example.winemap.presentation.auth
 
+import com.example.winemap.domain.models.User
 import com.example.winemap.domain.repository.UserRepository
 import com.example.winemap.presentation.BaseViewModel
 import com.example.winemap.utils.NetworkUtils
@@ -236,4 +237,31 @@ class AuthViewModel(
             hideForgotPasswordDialog()
         }
     }
+
+
+    fun updateUser(updatedUser: User) {
+        viewModelScope.launch {
+            _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
+
+            when (val result = userRepository.updateUser(updatedUser)) {
+                is Result.Success -> {
+                    _uiState.value = _uiState.value.copy(
+                        currentUser = result.data,
+                        isLoading = false,
+                        errorMessage = null
+                    )
+                }
+                is Result.Error -> {
+                    _uiState.value = _uiState.value.copy(
+                        isLoading = false,
+                        errorMessage = result.exception.message ?: "Update failed. Please try again."
+                    )
+                }
+                is Result.Loading -> {
+                    // Stay loading
+                }
+            }
+        }
+    }
+
 }
